@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MLB Team History from 1973 to 2014</title>
+  <meta charset="utf-8">
+  <meta name="description" content="MLB Team History from 1973 to 2014">
+  <meta name="author" content="Douglas Wirtz">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="./assets/css/ribbons.css"></link>
+
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>MLB Team History from 1973 to 2014</h1>
+    <h2>Developing Data Products Course Project</h2>
+    <p>Douglas Wirtz<br/>Chemist</p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <hgroup>
+    <h2>MLB Application</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>The MLB application was built with intention to explore the MLB team history from 1973 to 2014.</p>
+
+<p>The application can be found at <a href="https://dswirtz.shinyapps.io/MLB_App/">https://dswirtz.shinyapps.io/MLB_App/</a>.</p>
+
+<p>The features of the application are as follows:</p>
+
+<ul>
+<li>A slider that allows the user to filter which years are shown in the dataset</li>
+<li>A series of checkboxes that allows the user to filter which teams are shown in the dataset</li>
+<li>A legend that has the extended names for the variables in the dataset</li>
+<li>An interactive datatable that allows the user to search, ascend, and descend variables</li>
+<li>An interactive chart that allows the user to visualize a comparison between two variables</li>
+<li>Information tab that includes details of the application</li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-2" style="background:;">
+  <hgroup>
+    <h2>Data</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>The data used for this application was found on <a href="http://www.statcrunch.com">statcrunch.com</a>.
+The dataset, <a href="http://www.statcrunch.com/5.0/index.php?dataid=1819295">MLB Team Histories (1973-2014)</a> was modified to remove redundancies and fix inaccuracies in some stats. The modified version of the dataset can be found on <a href="https://github.com/dswirtz/DevelopingDataProducts">github</a>. Dimensions and features of the data frame are below.</p>
+
+<pre><code class="r">data &lt;- read.csv(&quot;MLB Team History (1973-2014).csv&quot;, check.names = FALSE)
+dim(data); colnames(data)
+</code></pre>
+
+<pre><code>## [1] 1162   27
+</code></pre>
+
+<pre><code>##  [1] &quot;Year&quot;      &quot;Team&quot;      &quot;Franchise&quot; &quot;G&quot;         &quot;W&quot;        
+##  [6] &quot;L&quot;         &quot;R&quot;         &quot;R/G&quot;       &quot;AB&quot;        &quot;H&quot;        
+## [11] &quot;1B&quot;        &quot;2B&quot;        &quot;3B&quot;        &quot;HR&quot;        &quot;BB&quot;       
+## [16] &quot;SO&quot;        &quot;SB&quot;        &quot;CS&quot;        &quot;HBP&quot;       &quot;SF&quot;       
+## [21] &quot;Outs&quot;      &quot;RA&quot;        &quot;RA/G&quot;      &quot;BA&quot;        &quot;OBP&quot;      
+## [26] &quot;SLG&quot;       &quot;OPS&quot;
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-3" style="background:;">
+  <hgroup>
+    <h2>Data Table Example</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>In this example, the data table was filtered to see which team from 2004 to 2014 had the most wins. You can see that the 2004 St. Louis Cardinals had the most wins with 105.</p>
+
+<p><img src="./assets/img/DataTable.png" alt=""></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-4" style="background:;">
+  <hgroup>
+    <h2>Chart Example</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>In this example, the chart is displaying the trend of strike outs (SO) for every team from 1973 to 2014. </p>
+
+<p><img src="./assets/img/Chart.png" alt=""></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='MLB Application'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='Data'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='Data Table Example'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='Chart Example'>
+         4
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>

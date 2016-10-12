@@ -1,0 +1,149 @@
+---
+title: "Practical Machine Learning Course Project"
+author: "Douglas Wirtz"
+date: "May 5, 2016"
+output: html_document
+---
+
+***
+
+##Introduction
+
+This is the final project for the Practical Machine Learning course in the data science specialization offered by Johns Hopkins University on Coursera.The simple goal of this project is to create a prediction model from a set of data and use it to predict 20 different test cases.
+
+The data are collected from large amounts of personal activity devices such as *Jawbone Up*, *Nike FuelBand*, and *Fitbit*. These types of devices quantify self movement which allow people to improve their health or find patterns in their behavior. Oftentimes, users of these devices will use them to quantify how much of a particular activity they do, but rarely use them to quantify how well they do it. This project will focus on the data collected from the accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perfom barbell lifts correctly and incorrectly in 5 different ways. From this, a model is created to predict the manner in which they did the exercise. 
+
+####Data
+
+For more information on the data set, you can find it [here](http://groupware.les.inf.puc-rio.br/har) under the section on the Weight Lifting Exercise Dataset.
+
+The training data for model creation are available [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv).
+
+The test data are available [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv).
+
+***
+
+##Get the Data and Setup for Analysis
+
+To begin, the following pacakages were loaded and a seed was set for reproducibility purposes.
+
+```{r, cache=TRUE,echo=TRUE,warning=FALSE}
+library(caret)
+library(ggplot2)
+library(lattice)
+library(randomForest)
+set.seed(18)
+```
+
+Download the data if they don't already exist.
+
+```{r,echo=TRUE,warning=FALSE}
+trainCSV <- "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+testCSV <- "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+if(!file.exists("train.csv")){
+    download.file(trainCSV, destfile = "train.csv")
+}
+if(!file.exists("test.csv")){
+    download.file(testCSV, destfile = "test.csv")
+}
+train <- read.csv("train.csv", na.strings = c("NA", "#DIV/0", ""))
+test <- read.csv("test.csv", na.strings = c("NA", "#DIV/0", ""))
+```
+
+To estimate the out-of-sample error, the train data is split into a smaller training set `train1` and a validation set `train2` based on the "classe" variable.
+
+```{r, echo=TRUE,cache=TRUE}
+inTrain <- createDataPartition(train$classe, p = 0.7, list = FALSE)
+train1 <- train[inTrain, ]
+train2 <- train[-inTrain, ]
+dim(train1); dim(train2)
+```
+
+Now the data must be cleaned by removing the variables with nearly zero variance, removing the variables that are almost always "NA", and removing the variables that don't make sense for prediction.
+
+```{r, echo=TRUE, cache=TRUE}
+## Remove the variables with nearly zero variance
+nzv1 <- nearZeroVar(train1)
+train1 <- train1[, -nzv1]
+train2 <- train2[, -nzv1]
+
+nzv2 <- nearZeroVar(train)
+train <- train[, -nzv2]
+test <- test[, -nzv2]
+dim(train1); dim(train2); dim(train); dim(test)
+## Remove the variables that have "NA" greater than or equal to 95% of the time
+trainNA1 <- sapply(train1, function(x) mean(is.na(x))) >= 0.95
+train1 <- train1[, trainNA1 == FALSE]
+train2 <- train2[, trainNA1 == FALSE]
+
+trainNA2 <- sapply(train, function(x) mean(is.na(x))) >= 0.95
+train <- train[, trainNA2 == FALSE]
+test <- test[, trainNA2 == FALSE]
+dim(train1); dim(train2); dim(train); dim(test)
+## Remove the variables that don't make sense for prediction
+colnames(train1)
+```
+
+Based on what we see above, the first 5 columns will be removed because they don't provide any help for model prediction.
+
+```{r, echo=TRUE}
+# Remove first 5 columns
+train1 <- train1[, -(1:5)]
+train2 <- train2[, -(1:5)]
+train <- train[, -(1:5)]
+test <- test[, -(1:5)]
+dim(train1); dim(train2); dim(train); dim(test)
+```
+
+***
+
+##Build the Model
+
+To build the model, I will start with a random forests method. If I don't think the model is good enough, I will try a different method. I will fit the model on `train1` while using a 3-fold cross-validation for the training control.
+
+```{r, echo=TRUE, cache=TRUE}
+# Fit model using training partition (train1) and random forest method
+trainControl <- trainControl(method = "cv",number = 3)
+fit <- train(classe ~ ., data = train1, method = "rf", trControl = trainControl)
+fit$finalModel
+```
+
+As you can see, the random forest generated 500 different trees trying 27 variables at each split. The resulting estimate of the error rate is 0.2% so this appears to be a very accurate model. The next step is to continue with this model and evaluate it against the validation set.
+
+***
+
+##Evaluate the Model
+In evaluating the model, I will use the fitted model to predict the `classe` variable in `train2`. This is shown using a confusion matrix.
+
+```{r, echo=TRUE, cache=TRUE}
+# Predict on validation data (train2)
+prediction <- predict(fit, newdata = train2)
+confusionMatrix(train2$classe, prediction)
+```
+
+The accuracy for this prediction is 99.8% which is very good. This also means the out-of-sample error is very small at 0.2%. I consider this random forest fit to be good enough to predict on the test data.
+
+***
+
+##Re-fit Model and Make Test Predictions
+Before I predict on the test data, I will re-fit the model using the entire training data using the same parameters as above.
+
+```{r, echo=TRUE, cache=TRUE}
+# Re-fit model using entire training data
+fit2 <- train(classe ~ ., data = train, method = "rf", trControl = trainControl)
+
+# Predict on test data
+prediction2 <- predict(fit2, newdata = test)
+
+# Write predictions to a file
+prediction2 <- as.character(prediction2)
+to_file <- function(x){
+    n <- length(x)
+    for(i in 1:n){
+        filename <- paste0("num_", i, ".txt")
+        write.table(x[i], file = filename, quote = FALSE, row.names = FALSE,
+                    col.names = FALSE)
+    }
+}
+to_file(prediction2)
+```

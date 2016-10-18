@@ -1,0 +1,141 @@
+---
+title: "Reproducible Research: Peer Assessment 1"
+output: 
+  html_document:
+    keep_md: true
+---
+# Introduction
+It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the "quantified self" movement -- a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
+
+This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
+
+## Data
+
+The data for this assignment can be downloaded from the course web
+site:
+
+* Dataset: [Activity monitoring data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip) [52K]
+
+The variables included in this dataset are:
+
+* **steps**: Number of steps taking in a 5-minute interval (missing
+    values are coded as `NA`)
+
+* **date**: The date on which the measurement was taken in YYYY-MM-DD
+    format
+
+* **interval**: Identifier for the 5-minute interval in which
+    measurement was taken
+
+The dataset is stored in a comma-separated-value (CSV) file and there
+are a total of 17,568 observations in this
+dataset.
+
+## Loading and preprocessing the data
+The raw data for this assignment was downloaded and extracted into the
+current working directory: 
+
+"C:/Users/Douglas/Desktop/DataScience/reproducible research project 1"
+
+Read in the Data
+```{r}
+data <- read.csv("activity.csv", na.strings = "NA")
+data$steps <- as.integer(data$steps)
+data$date <- as.Date(data$date)
+data$interval <- as.integer(data$interval)
+head(data)
+```
+Subset the data without "NA" observations
+```{r}
+data_sub <- subset(data, !is.na(data$steps))
+head(data_sub)
+```
+
+## What is mean total number of steps taken per day?
+Plot the distribution ignoring missing values
+```{r, echo=TRUE}
+StepsPerDay <- tapply(data_sub$steps, data_sub$date, sum)
+hist(StepsPerDay, col = "blue", breaks = 20,
+     xlab = "Total Number of Steps Per Day", ylab = "Frequency",
+     main = "Distribution of Steps Per Day")
+```
+
+Calculate mean and median of total number of steps taken per day
+```{r}
+mean(StepsPerDay)
+median(StepsPerDay)
+```
+## What is the average daily activity pattern?
+Plot the average number of steps taken per 5-minute interval
+```{r, echo=TRUE}
+AvgStepsInterval <- aggregate(steps ~ interval, data_sub, mean)
+plot(AvgStepsInterval$interval, AvgStepsInterval$steps, type = "l",
+     xlab = "5-Minute Intervals",
+     ylab = "Average Number of Steps Taken Across All Days",
+     main = "Average Number of Steps Per 5-Minute Interval")
+```
+
+Find the 5-minute interval where the number of steps reaches a max,
+on average across all days
+```{r}
+MaxSteps <- max(AvgStepsInterval$steps)
+AvgStepsInterval[AvgStepsInterval$steps == MaxSteps, ]
+```
+The maximum number of steps is 206.1698 at interval 835
+
+## Imputing missing values
+Calculate total number of missing values (coded as "NA") in dataset
+```{r}
+sum(is.na(data$steps))
+```
+Create a new dataset that is equal to the original, but with missing
+data filled in ("NA" is replaced with the mean of that 5-minute interval)
+```{r}
+data_adj <- data
+MissingData <- is.na(data_adj$steps)
+AvgInt <- tapply(data_sub$steps, data_sub$interval, mean)
+data_adj$steps[MissingData] <- AvgInt[as.character(data_adj$interval[MissingData])]
+head(data_adj)
+```
+Plot the distribution adjusting for the missing values
+```{r, echo=TRUE}
+AdjStepsPerDay <- tapply(data_adj$steps, data_adj$date, sum)
+hist(AdjStepsPerDay, col = "blue", breaks = 20,
+     xlab = "Total Number of Steps Per Day", ylab = "Frequency",
+     main = "Distribution of Steps Per Day (adjusted for missing values)")
+```
+
+Calculate mean and median of total number of steps taken per day of adjusted dataset
+```{r}
+mean(AdjStepsPerDay)
+median(AdjStepsPerDay)
+```
+After imputing the missing values with the mean of that 5-minute interval,
+the mean of the dataset didn't change. The median, however, increased slightly.
+The cause of this is due to the fact that the imputed values were means of steps
+at 5-minute intervals. This will cause there to be a higher frequency
+of days that have the average number of steps per day. As for the median,
+with an increase in frequency at the average number of steps, the closer
+the median will get to mean. In this case, the mean and median of the adjusted
+dataset are equal.
+
+## Are there differences in activity patterns between weekdays and weekends?
+Create two new factors, weekday and weekend
+```{r}
+weekend <- weekdays(as.Date(data_adj$date)) %in% c("Saturday", "Sunday")
+data_adj$DayOfWeek <- "weekday"
+data_adj$DayOfWeek[weekend == TRUE] <- "weekend"
+data_adj$DayOfWeek <- as.factor(data_adj$DayOfWeek)
+head(data_adj)
+```
+Make a plot to compare the average number of steps taken, averaged across
+all weekdays or weekends
+```{r, echo=TRUE}
+AvgStepsIntervalByFactor <- aggregate(steps ~ interval + DayOfWeek,
+                                      data_adj, mean)
+library(lattice)
+xyplot(steps ~ interval | DayOfWeek, AvgStepsIntervalByFactor,
+       type = "l", layout = c(1,2), xlab = "5-Minute Intervals", 
+       ylab = "Average Number of Steps Taken Across All Days",
+       main = "Average Number of Steps Per 5-Minute Interval\ncomparing weekends to weekdays")
+```

@@ -1,0 +1,172 @@
+---
+title: 'Reproducible Research: Peer Assessment 2'
+author: "Douglas Wirtz"
+date: "January 29, 2016"
+output: word_document
+--- 
+### Project Title
+Severe Weather Impact on the Public Health and Economy in the US
+
+***
+
+### Synopsis
+Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern.
+
+This project involves exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
+
+Upon completion of the analysis, I have determined that tornadoes have the greatest impact when it comes to population health and floods have the greatest impact when it comes to economic consequences.
+
+***
+
+### Data
+The data for this assignment come in the form of a comma-separated-value file compressed via the bzip2 algorithm to reduce its size. You can download the file from the course web site:
+
+* Dataset: [Storm Data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2) [47Mb]
+
+There is also some documentation of the database available. Here you will find how some of the variables are constructed/defined.
+
+* National Weather Service: [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf)
+
+* National Climatic Data Center Storms Events [FAQ](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2FNCDC%20Storm%20Events-FAQ%20Page.pdf)
+
+The events in the database start in the year 1950 and end in November 2011. In the earlier years of the database there are generally fewer events recorded, most likely due to a lack of good records. More recent years should be considered more complete.
+
+***
+
+### Questions
+The step-by-step analysis below addresses the following questions:
+
+1. Across the United States, which types of events (as indicated in the **EVTYPE** variable) are most harmful with respect to population health?
+
+2. Across the United States, which types of events have the greatest economic consequences?
+
+***
+
+### Data Processing
+Create directory and download data from NOAA Storm Database if they do not already exist. Then read data into R.
+```{r, cache = TRUE}
+# if directory does not exist, then create the directory
+if(!file.exists("data")){
+        dir.create("data")
+}
+# if file does not exist in the directory, then download the file
+if(!file.exists("data/repdata-data-StormData.csv.bz2")){
+        download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2", destfile = "data/repdata-data-StormData.csv.bz2")
+}
+#read in the data
+data <- read.csv("data/repdata-data-StormData.csv.bz2")
+
+```
+Load the packages needed for data analysis.
+```{r, warning = FALSE}
+library(ggplot2)
+library(plyr)
+```
+Print the first 3 lines. The purpose is to figure out which variables will be important for answering the questions and to determine the relationships between the variables.
+```{r, cache = TRUE}
+data[1:3,]
+```
+Subset the data with only the variables needed to answer the questions.
+```{r, cache = TRUE}
+data_sub <- subset(data, select = c("EVTYPE", "FATALITIES", "INJURIES", 
+                                    "PROPDMG", "PROPDMGEXP", "CROPDMG", 
+                                    "CROPDMGEXP"))
+head(data_sub)
+```
+#### Events Most Harmful To Population Health
+From the subset data, aggregate the sum of the fatalities and injuries based on event type.
+```{r, cache = TRUE}
+data_health <- aggregate(cbind(FATALITIES, INJURIES) ~ EVTYPE, data_sub, sum)
+```
+Remove the event types with no fatalities or injuries, add fatalities and injuries together, and order data frame based on highest total.
+```{r, cache = TRUE}
+# remove the entries with no fatalities or injuries
+data_health <- data_health[data_health$FATALITIES > 0 | data_health$INJURIES > 0,]
+# add the fatalities and injuries together
+data_health$TOTAL <- data_health$FATALITIES + data_health$INJURIES
+# order the data frame with the highest total first
+data_health <- data_health[order(data_health$TOTAL, decreasing = TRUE),]
+data_health[1:10,]
+```
+#### Events With The Greatest Economic Consequences
+According to the [Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf), property and crop damage (`PROPDMG` and `CROPDMG`) are expanded using the characters in `PROPDMGEXP` and `CROPDMGEXP`. "K" = Thousands (10^3), "M" = Millions (10^6), and "B" = Billions (10^9).
+
+Remove the entries in the subset data where `PROPDMGEXP` or `CROPDMGEXP` is not equal to one of the characters above.
+```{r, cache = TRUE}
+# make all the characters uppercase 
+data_sub$PROPDMGEXP <- toupper(data_sub$PROPDMGEXP)
+data_sub$CROPDMGEXP <- toupper(data_sub$CROPDMGEXP)
+# extract data with all rows containg "K", "M", or "B"
+data_econ <- data_sub[data_sub$PROPDMGEXP == "K" | data_sub$CROPDMGEXP == "K" |
+                              data_sub$PROPDMGEXP == "M" | data_sub$CROPDMGEXP == "M" | 
+                              data_sub$PROPDMGEXP == "B" | data_sub$CROPDMGEXP == "B",]
+# get all the variables in PROPDMGEXP and CROPDMGEXP
+count(data_econ$PROPDMGEXP)
+count(data_econ$CROPDMGEXP)
+
+```
+Adjust the subset data to replace the characters with numeric values.
+```{r, cache = TRUE}
+# create key and replace characters with numeric values for PROPDMGEXP
+propkey <- c("\"\"" = 10^0, "0" = 10^0, "3" = 10^0, "5" = 10^0, "B" = 10^9, "K" = 10^3, "M" = 10^6)
+data_econ$PROPDMGEXP <- propkey[as.character(data_econ$PROPDMGEXP)]
+data_econ$PROPDMGEXP[is.na(data_econ$PROPDMGEXP)] <- 10^0
+# create key and replace characters with numeric values for CROPDMGEXP
+cropkey <- c("\"\"" = 10^0, "?" = 10^0, "0" = 10^0, "B" = 10^9, "K" = 10^3, "M" = 10^6)
+data_econ$CROPDMGEXP <- cropkey[as.character(data_econ$CROPDMGEXP)]
+data_econ$CROPDMGEXP[is.na(data_econ$CROPDMGEXP)] <- 10^0
+```
+Create two additional columns that combine the property and crop damage components
+```{r, cache = TRUE}
+# multiply PROPDMG and PROPDMGEXP to create a new column PROPCOST
+data_econ$PROPCOST <- data_econ$PROPDMG * data_econ$PROPDMGEXP
+# multiply CROPDMG and CROPDMGEXP to create a new column CROPCOST
+data_econ$CROPCOST <- data_econ$CROPDMG * data_econ$CROPDMGEXP
+head(data_econ)
+```
+From the new data, aggregate the sum of the property and crop damage based on event type.
+```{r, cache = TRUE}
+data_econ <- aggregate(cbind(PROPCOST, CROPCOST) ~ EVTYPE, data_econ, sum)
+```
+Add the `PROPCOST` and `CROPCOST` together and order the data frame based on highest total
+```{r, cache = TRUE}
+# add the PROPCOST and CROPCOST together
+data_econ$TOTAL <- data_econ$PROPCOST + data_econ$CROPCOST
+# order the data frame with the highest total first
+data_econ <- data_econ[order(data_econ$TOTAL, decreasing = TRUE),]
+data_econ[1:10,]
+```
+***
+
+### Results
+#### Top 10 Events Most Harmful To Population Health
+Graph the data to display which events had the greatest impact on fatalities and injuries.
+```{r, echo = TRUE}
+ggplot(head(data_health, 10), aes(reorder(EVTYPE, -TOTAL), TOTAL)) +
+        geom_bar(stat = "identity", fill = "red") +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        xlab("Event Type") +
+        ylab("Total Fatalities and Injuries") +
+        ggtitle("Top 10 Events Most Harmful To Population Health") 
+```
+
+#### Top 10 Events With The Greatest Economic Consequences
+Graph the data to display which events had the greatest impact on property and crop damage.
+```{r, echo = TRUE}
+ggplot(head(data_econ, 10), aes(reorder(EVTYPE, -TOTAL), TOTAL)) +
+        geom_bar(stat = "identity", fill = "blue") +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        xlab("Event Type") +
+        ylab("Total Property and Crop Damage ($)") +
+        ggtitle("Top 10 Events With The Greatest Economic Consequences")
+```
+
+***
+
+### Conclusions
+
+1. With respect to population health, tornado events had the greatest impact. This conclusion was based on the total number of fatalities and injuries in the US from 1950 to 2011.
+
+2. With respect to economic consequences, flood events had the greatest impact. This conclusion was based on the total cost of property and crop damage in the US from 1950 to 2011.
+
+***

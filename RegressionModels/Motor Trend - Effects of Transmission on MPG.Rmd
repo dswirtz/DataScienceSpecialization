@@ -1,0 +1,126 @@
+---
+title: "Motor Trend - Effects of Transmisson on MPG"
+author: "Douglas Wirtz"
+date: "March 29, 2016"
+output: word_document
+---
+
+***
+
+##Introduction and Executive Summary
+This data anaylsis was performed to specifications required by the course project of the Regression Models course in the Data Science Specialization offered by Johns Hopkins University on Coursera. In this project, the R dataset, `mtcars`, was used to explore the relationship between a set of variables and miles per gallon (`mpg`). 
+
+The data was used to answer the following questions:
+
+* Is automatic or manual transmission better for MPG?
+
+* What is the MPG difference between automatic and manual transmissions?
+
+Based on this regression analysis, we can conclude that manual transmission cars have a higher miles per gallon (`mpg`). After ajusting the miles per gallon for horsepower (`hp`), number of cylinders (`cyl`), and weight (`wt`), manual transmission cars get 1.8 more miles per gallon when comparing the automatic transmission cars. To further the analysis, we can conclude that MPGs will decrease by 2.5 for every 1000-pound increase in weight. MPGs will decrease 0.32 for every 10 increase in horsepower. When the number of cylinders increase from 4 to 6, the MPGs decrease by 3. And finally, the MPGs will decrease by another 2.2 when the numbers of cylinders is increased from 6 to 8.
+
+***
+
+##Data Processing
+First we need to load in the dataset and adjust the data frame based on the [R Documentation](https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/mtcars.html). 
+
+```{r}
+data("mtcars")
+mtcars$cyl <- factor(mtcars$cyl)
+mtcars$vs <- factor(mtcars$vs)
+mtcars$am <- factor(mtcars$am, labels = c("Automatic", "Manual"))
+mtcars$gear <- factor(mtcars$gear)
+mtcars$carb <- factor(mtcars$carb)
+str(mtcars)
+```
+
+***
+
+##Exploratory Analysis
+This section is focused around making plots to see the correlation between some of the variables in the dataset. This will give us a visual representation of how certain variables in the dataset affect the MPGs. 
+
+**Figure No. 1** in the Appendix is a pairs plot showing the comparison correlation of each variable. Visually, you can see that variables like number of cylinders (`cyl`), gross horsepower (`hp`), weight (`wt`), and the type of transmission (`am`) have a strong correlation with miles per gallon (`mpg`). When looking at the comparison between MPGs and the type of transmission, it appears manual cars have a higher MPG. Linear models will be used below to test this observation.
+
+**Figure No. 2** in the Appendix shows a simple boxplot comparing the miles per gallon to the type of transmission. In this plot, you can clearly see an increase in MPGs in cars with a manual transmission. Again, this will be tested with some linear regression models.
+
+**Figure No. 3** in the Appendix shows the effect transmission type has on MPGs given the number of cylinders the car has. As you can see, when the number of cylinders increase, the MPGs in manual transmission cars become more and more like the MPGs in automatic transmission cars.
+
+In conclusion of the exploratory analysis, we see that MPGs differs by transmission type, but in addition, we can see that transmission type isn't the only variable that may or may not affect MPGs. A regression analysis is performed to test whether variables other than transmission type affect MPGs.  The analysis will also answer the following questions:
+
+* Is automatic or manual transmission better for MPG?
+
+* What is the MPG difference between automatic and manual transmissions?
+
+***
+
+##Regression Analysis
+The focus of this section is to find the best fitting model for the set of data. To do this we will first look at the summary for the linear model where the outcome is miles per gallon (`mpg`) and the only predictor is type of transmission (`am`).
+
+```{r, echo = TRUE}
+summary(lm(mpg ~ am, data = mtcars))
+```
+
+As you can see, the adjusted R^2^ value is 0.34, which means only 34% of the variation is explained by this model. To get a better fitting model, next we look at the summary for the linear model where the outcome is miles per gallon (`mpg`) and every other variable is used as a predictor.
+
+```{r, echo = TRUE}
+summary(lm(mpg ~ ., data = mtcars))
+```
+
+From this model you can that the variation explained by the model has increased to 80%. That's better, but not the best. To find the best model, we will use the `step` method to build multiple regression models and select only the best variables to predict the outcome of miles per gallon (`mpg`).
+
+```{r, echo = TRUE, results = 'hide'}
+best <- step(lm(mpg ~ ., data = mtcars), direction = "both")
+```
+```{r, echo = TRUE}
+summary(best)
+```
+
+From this model, you can finally see that 84% of the variation is explained, resulting in the best-fitting, multi-variable regression model. Now that we have the best-fitting model, we will plot the model residuals and diagnostics.
+
+```{r, echo = TRUE}
+par(mfrow = c(2, 2))
+plot(best)
+```
+
+From these plots you can see that Residuals vs. Fitted plot are randomly scattered which verifies the independence. The normal Q-Q plot has points that, for the most part, fall along the line which means that the residuals are normally distributed.
+
+For statistical inference, a t.test was run to see whether the MPGs between automatic and manual car transmissions are the same. The results are as follows:
+
+```{r, echo = TRUE}
+t.test(mpg ~ am, data = mtcars)
+```
+
+From the results, the p-value is <0.05 which means we reject the null hypothesis in favor of the alternative. The true difference of the means is not equal to 0. In other words, the MPGs for automatic transmission cars is not equal to the MPGs for manual transmission cars.
+
+***
+
+##Conclusion
+Based on this regression analysis, we can conclude that manual transmission cars have a higher miles per gallon (`mpg`). After ajusting the miles per gallon for horsepower (`hp`), number of cylinders (`cyl`), and weight (`wt`), manual transmission cars get 1.8 more miles per gallon when comparing the automatic transmission cars. To further the analysis, we can conclude that MPGs will decrease by 2.5 for every 1000-pound increase in weight. MPGs will decrease 0.32 for every 10 increase in horsepower. When the number of cylinders increase from 4 to 6, the MPGs decrease by 3. And finally, the MPGs will decrease by another 2.2 when the numbers of cylinders is increased from 6 to 8.
+
+***
+
+##Appendix
+```{r, echo = TRUE}
+pairs(mtcars, main = "mtcars data")
+```
+
+**Figure No. 1** -- Variable Comarison
+
+***
+
+```{r, echo = TRUE}
+boxplot(mpg ~ am, data = mtcars,
+        col = c("red", "blue"),
+        ylab = "Miles Per Gallon (mpg)",
+        xlab = "Transmission Type (am)")
+```
+
+**Figure No. 2** -- Effect of Transmission Type on MPGs
+
+***
+
+```{r, echo = TRUE}
+coplot(mpg ~ am | cyl, data = mtcars,
+       panel = panel.smooth, rows = 1)
+```
+
+**Figure No. 3** -- Effect of Transmission Type on MPGs Given the Number of Cylinders

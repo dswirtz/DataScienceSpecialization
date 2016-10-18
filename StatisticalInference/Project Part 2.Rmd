@@ -1,0 +1,95 @@
+---
+title: "Statistical Inference on Tooth Growth Data -- Part 2"
+author: "Douglas Wirtz"
+date: "February 24, 2016"
+output: html_document
+---
+
+***
+
+#The Effect of Vitamin C on Tooth Growth in Guinea Pigs
+###Description
+The response is the length of odontoblasts (teeth) in each of 10 guinea pigs at each of three dose levels of Vitamin C (0.5, 1, and 2 mg) with each of two delivery methods (orange juice or ascorbic acid).
+
+For this exploratory analysis, we are interested in how the tooth growth compares based on delivery method and dosage.
+
+***
+
+###Analysis
+```{r, cache=TRUE}
+data("ToothGrowth")
+str(ToothGrowth)
+summary(ToothGrowth)
+head(ToothGrowth)
+boxplot(len ~ dose, ToothGrowth,
+        xlab = "Dosage of Vitamin C (mg)",
+        ylab = "Tooth Length",
+        main = "Length of Guinea Pig Teeth Based on Dosage",
+        col = "red")
+```
+
+The data above shows the tooth length based on dosage. Now we will fine-tune our analysis to show the tooth length based on dosage and delivery method.
+
+```{r, cache=TRUE}
+#first we must label our factor via delivery methods
+oj <- levels(ToothGrowth$supp)[1]
+vc <- levels(ToothGrowth$supp)[2]
+summary(ToothGrowth[ToothGrowth$supp == oj,])
+summary(ToothGrowth[ToothGrowth$supp == vc,])
+par(mfrow = c(1,2))
+boxplot(len ~ dose, ToothGrowth[ToothGrowth$supp == oj,],
+        xlab = "Dosage of Vitamin C (mg)",
+        ylab = "Tooth Length",
+        main = "Orange Juice",
+        col = "red",
+        ylim = range(0,35))
+boxplot(len ~ dose, ToothGrowth[ToothGrowth$supp == vc,],
+        xlab = "Dosage of Vitamin C (mg)",
+        ylab = "Tooth Length",
+        main = "Ascorbic Acid",
+        col = "red",
+        ylim = range(0,35))
+```
+
+From the looks of these plots, it appears that dosage levels of Vitamin C has an effect on tooth length, and the type of delivery method may or may not have an effect on tooth length. Both of these claims will be tested using the statistical tests shown below.
+
+For this experiment, we assume there is an equal variance in the guinea pigs population.
+
+To test our claims, we will use a two sample t.test to determine if dosage and delivery method has an effect on tooth length. If the p-value > 0.05 and the 95% confidence interval contains 0, then we will not have a sufficient amount of evidence to reject the null hypothesis. In other words, p-value > 0.05 and 95% confidence interval containing 0 means dosage and/or delivery method does not affect tooth length.
+```{r, cache=TRUE}
+#t.test comparing delivery methods (orange juice vs ascorbic acid)
+t.test(ToothGrowth$len[ToothGrowth$supp == "OJ"],
+       ToothGrowth$len[ToothGrowth$supp == "VC"], 
+       paired = FALSE, var.equal = FALSE)
+```
+
+When comparing the delivery methods, the resulting p-value of 0.06 means that we do not have enough evidence to reject the null hypothesis. In conclusion, we cannot assume that the delivery method of Vitamin C has an effect on tooth length.
+```{r, cache=TRUE}
+#t.test comparing two dosages (1mg to 2mg)
+t.test(ToothGrowth$len[ToothGrowth$dose == 2],
+       ToothGrowth$len[ToothGrowth$dose == 1],
+       paired = FALSE, var.equal = TRUE)
+```
+
+When comparing 1mg dose to 2mg dose, the resulting p-value of 1.811e-05 means that we have enough evidence to reject the null hypothesis in favor of the alternative. In conclusion, we can assume that the dosage change from 1mg to 2mg has an increasing effect on tooth length.
+```{r, cache=TRUE}
+#t.test comparing two dosages (0.5mg to 1mg)
+t.test(ToothGrowth$len[ToothGrowth$dose == 1],
+       ToothGrowth$len[ToothGrowth$dose == 0.5],
+       paired = FALSE, var.equal = TRUE)
+```
+
+When comparing 0.5mg dose to 1mg dose, the resulting p-value of 1.266e-07 means that we have enough evidence to reject the null hypothesis in favor of the alternative. In conclusion, we can assume that the dosage change from 0.5mg to 1mg has an increasing effect on tooth length.
+```{r, cache=TRUE}
+#t.test comparing two dosages (0.5mg to 2mg)
+t.test(ToothGrowth$len[ToothGrowth$dose == 2],
+       ToothGrowth$len[ToothGrowth$dose == 0.5],
+       paired = FALSE, var.equal = TRUE)
+```
+
+When comparing 0.5mg dose to 2mg dose, the resulting p-value of 2.838e-14 means that we have enough evidence to reject the null hypothesis in favor of the alternative. In conclusion, we can assume that the dosage change from 0.5mg to 2mg has an increasing effect on tooth length.
+
+***
+
+###Final Remarks
+With respect to the effect of Vitamin C on tooth growth in guinea pigs, the delivery method (orange juice or ascorbic acid) has no effect on tooth length whereas increasing the dosage of Vitamin C (0.5mg - 2mg) has an increasing effect on tooth length.

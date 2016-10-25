@@ -59,4 +59,4 @@ Check out the application [here](https://dswirtz.shinyapps.io/NextWord_App/)!
 
 Please enjoy the application, and feel free to send any comments to dougwirtz@gmail.com.
 
-![alt text](App_Image.png)
+![alt text](App_Image.PNG)

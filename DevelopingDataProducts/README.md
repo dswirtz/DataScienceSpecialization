@@ -24,7 +24,7 @@ The data used for this project is a modified [statcrunch](http://www.statcrunch.
 
 **Shiny Application** - [https://dswirtz.shinyapps.io/MLB_App/]( https://dswirtz.shinyapps.io/MLB_App/)
 
-**Slidify Presentation** - http://dswirtz.github.io/ - Removed
+**Slidify Presentation** - http://dswirtz.github.io/
 
 **Author** - Douglas Wirtz
 

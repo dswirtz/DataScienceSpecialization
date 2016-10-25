@@ -3,6 +3,10 @@
 
 **Date:** October 3rd, 2016
 
+**Application:** [https://dswirtz.shinyapps.io/NextWord_App/](https://dswirtz.shinyapps.io/NextWord_App/)
+
+**Presentation:** [http://rpubs.com/dswirtz/NextWord](http://rpubs.com/dswirtz/NextWord)
+
 ***
 
 #### Background
@@ -34,7 +38,3 @@ The [data](https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-Sw
 ***
 
 #### Enjoy!
-
-**Application:**
-
-**Presentation:** [http://rpubs.com/dswirtz/NextWord](http://rpubs.com/dswirtz/NextWord)

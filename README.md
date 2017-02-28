@@ -1,7 +1,5 @@
 # Data Science Specialization
 
-***
-
 ####Douglas Wirtz
 
 ####November 2015 - October 2016
